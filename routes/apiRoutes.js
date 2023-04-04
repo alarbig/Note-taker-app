@@ -1,30 +1,27 @@
-const router = require('express').Router();
-const store = require('../db/store');
+const app = require('express').Router();;
+const { readFromFile, readAndAppend } = require('../helpers/fsUtils');
 
-router.get('/notes', (req, res) => {
-  store
-    .getNotes()
-    .then((notes) => {
-      return res.json(notes);
-    }
-    ) .catch((err) => res.status(500).json(err));
+app.get('/notes', (req, res) => {
+    readFromFile('./db/db.json').then((data) => res.json(JSON.parse(data)));
 });
 
-router.post('/notes', (req, res) => {
-  store
-    .addNote(req.body)
-    .then((note) => res.json(note))
-    .catch((err) => res.status(500).json(err));
+app.post('/notes', (req, res) => {
+    console.log(req.body);
+
+    const { title, text } = req.body;
+
+    if (req.body) {
+        const newNote = {
+            title,
+            text,
+        };
+
+        readAndAppend(newNote, './db/db.json');
+        res.json(`Note added successfully 🚀`);
+    } else {
+        res.error('Error in adding note');
+    }
 }
 );
 
-// DELETE "/api/notes" deletes the note with an id equal to req.params.id
-router.delete('/notes/:id', (req, res) => {
-  store
-    .removeNote(req.params.id)
-    .then(() => res.json({ ok: true }))
-    .catch((err) => res.status(500).json(err));
-}
-);
-
-module.exports = router;
+module.exports = app;
